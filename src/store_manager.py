@@ -12,6 +12,7 @@ from orders.controllers.user_controller import create_user, remove_user, get_use
 from stocks.controllers.product_controller import create_product, remove_product, get_product
 from stocks.controllers.stock_controller import get_stock, set_stock, get_stock_overview
 from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
+import threading
 
 app = Flask(__name__)
 
@@ -116,6 +117,13 @@ def graphql_supplier():
 @app.route("/metrics")
 def metrics():
     return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
+
+def generate_reports_and_cache():
+    threading.Timer(2.0, get_report_highest_spending_users, args=(True,)).start()
+    threading.Timer(2.0, get_report_best_selling_products, args=(True,)).start()
+    threading.Timer(60.0, generate_reports_and_cache).start()
+
+generate_reports_and_cache()
 
 # Start Flask app
 if __name__ == '__main__':
